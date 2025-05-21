@@ -2,10 +2,10 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Pixel Art Maker</title>
+  <title>Pixel Art - Grille personnalisée</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-    canvas { border: 1px solid #333; cursor: crosshair; }
+    canvas { border: 1px solid #000; image-rendering: pixelated; cursor: pointer; }
     #controls { margin-top: 10px; }
     input, select, button, textarea { margin: 5px; }
     textarea { width: 100%; height: 100px; }
@@ -13,15 +13,15 @@
 </head>
 <body>
 
-  <h1>Pixel Art Creator</h1>
+  <h1>Pixel Art - Grille personnalisée</h1>
 
-  <label for="pixelSize">Taille du pixel :</label>
-  <select id="pixelSize">
-    <option value="8">8px</option>
-    <option value="16">16px</option>
-    <option value="32">32px</option>
+  <label for="gridSize">Taille de la grille :</label>
+  <select id="gridSize">
+    <option value="8">8 x 8</option>
+    <option value="16">16 x 16</option>
+    <option value="32">32 x 32</option>
   </select>
-  <button onclick="initCanvas()">Créer</button>
+  <button onclick="initCanvas()">Créer la grille</button>
 
   <div id="canvasContainer"></div>
 
@@ -37,62 +37,55 @@
 
   <script>
     let canvas, ctx;
-    let pixelSize = 8;
-    let cols, rows;
-    let isDrawing = false;
+    let gridSize = 8;
+    const pixelSize = 20; // Taille d'affichage d'une case
 
     function initCanvas() {
-      pixelSize = parseInt(document.getElementById("pixelSize").value);
-      cols = 32;
-      rows = 32;
-      const width = cols * pixelSize;
-      const height = rows * pixelSize;
+      gridSize = parseInt(document.getElementById("gridSize").value);
+      const canvasSize = gridSize * pixelSize;
 
-      // Créer canvas
       const container = document.getElementById("canvasContainer");
       container.innerHTML = '';
       canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = canvasSize;
+      canvas.height = canvasSize;
       ctx = canvas.getContext("2d");
+
+      // Fond blanc
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, width, height);
+      ctx.fillRect(0, 0, canvasSize, canvasSize);
 
       // Grille
       drawGrid();
 
-      // Events
-      canvas.addEventListener("mousedown", () => isDrawing = true);
-      canvas.addEventListener("mouseup", () => isDrawing = false);
-      canvas.addEventListener("mouseleave", () => isDrawing = false);
-      canvas.addEventListener("mousemove", draw);
+      // Événement clic pour dessiner
+      canvas.addEventListener("click", paintPixel);
 
       container.appendChild(canvas);
     }
 
     function drawGrid() {
-      ctx.strokeStyle = "#ccc";
-      for (let x = 0; x <= canvas.width; x += pixelSize) {
+      ctx.strokeStyle = "#cccccc";
+      for (let i = 0; i <= gridSize; i++) {
+        const pos = i * pixelSize;
         ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
+        ctx.moveTo(pos, 0);
+        ctx.lineTo(pos, canvas.height);
         ctx.stroke();
-      }
-      for (let y = 0; y <= canvas.height; y += pixelSize) {
         ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
+        ctx.moveTo(0, pos);
+        ctx.lineTo(canvas.width, pos);
         ctx.stroke();
       }
     }
 
-    function draw(e) {
-      if (!isDrawing) return;
+    function paintPixel(e) {
       const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / pixelSize) * pixelSize;
-      const y = Math.floor((e.clientY - rect.top) / pixelSize) * pixelSize;
-      ctx.fillStyle = document.getElementById("colorPicker").value;
-      ctx.fillRect(x, y, pixelSize, pixelSize);
+      const x = Math.floor((e.clientX - rect.left) / pixelSize);
+      const y = Math.floor((e.clientY - rect.top) / pixelSize);
+      const color = document.getElementById("colorPicker").value;
+      ctx.fillStyle = color;
+      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
       drawGrid();
     }
 
@@ -135,5 +128,6 @@
       }
     }
   </script>
+
 </body>
 </html>
