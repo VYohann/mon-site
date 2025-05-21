@@ -27,6 +27,7 @@
 
   <div id="controls">
     <input type="color" id="colorPicker" value="#000000">
+    <label><input type="checkbox" id="toggleGrid" checked onchange="refreshCanvas()"> Afficher la grille</label><br>
     <button onclick="exportAsImage()">Exporter en image</button>
     <button onclick="exportAsBase64()">Exporter en Base64</button>
     <button onclick="importFromBase64()">Importer Base64</button>
@@ -38,30 +39,45 @@
   <script>
     let canvas, ctx;
     let gridSize = 8;
-    const pixelSize = 20; // Taille d'affichage d'une case
+    const pixelSize = 20;
+    let showGrid = true;
+    let pixelData = [];
 
     function initCanvas() {
       gridSize = parseInt(document.getElementById("gridSize").value);
-      const canvasSize = gridSize * pixelSize;
+      const size = gridSize * pixelSize;
+      pixelData = [];
 
       const container = document.getElementById("canvasContainer");
       container.innerHTML = '';
       canvas = document.createElement("canvas");
-      canvas.width = canvasSize;
-      canvas.height = canvasSize;
+      canvas.width = size;
+      canvas.height = size;
       ctx = canvas.getContext("2d");
 
-      // Fond blanc
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvasSize, canvasSize);
+      for (let y = 0; y < gridSize; y++) {
+        pixelData[y] = [];
+        for (let x = 0; x < gridSize; x++) {
+          pixelData[y][x] = "#ffffff"; // blanc par défaut
+        }
+      }
 
-      // Grille
-      drawGrid();
-
-      // Événement clic pour dessiner
       canvas.addEventListener("click", paintPixel);
-
       container.appendChild(canvas);
+
+      refreshCanvas();
+    }
+
+    function refreshCanvas() {
+      showGrid = document.getElementById("toggleGrid").checked;
+      // Redessiner tout
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          ctx.fillStyle = pixelData[y][x];
+          ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+        }
+      }
+      if (showGrid) drawGrid();
     }
 
     function drawGrid() {
@@ -84,29 +100,51 @@
       const x = Math.floor((e.clientX - rect.left) / pixelSize);
       const y = Math.floor((e.clientY - rect.top) / pixelSize);
       const color = document.getElementById("colorPicker").value;
-      ctx.fillStyle = color;
-      ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
-      drawGrid();
+      pixelData[y][x] = color;
+      refreshCanvas();
     }
 
     function exportAsImage() {
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext("2d");
+
+      // Dessiner uniquement les pixels (sans grille)
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          tempCtx.fillStyle = pixelData[y][x];
+          tempCtx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+        }
+      }
+
       const link = document.createElement('a');
       link.download = "pixel_art.png";
-      link.href = canvas.toDataURL();
+      link.href = tempCanvas.toDataURL();
       link.click();
     }
 
     function exportAsBase64() {
-      document.getElementById("base64Output").value = canvas.toDataURL();
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext("2d");
+
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          tempCtx.fillStyle = pixelData[y][x];
+          tempCtx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+        }
+      }
+
+      document.getElementById("base64Output").value = tempCanvas.toDataURL();
     }
 
     function importFromBase64() {
       const base64 = document.getElementById("base64Output").value;
       const img = new Image();
       img.onload = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        drawGrid();
       };
       img.src = base64;
     }
@@ -117,9 +155,7 @@
       reader.onload = function (e) {
         const img = new Image();
         img.onload = function () {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          drawGrid();
         };
         img.src = e.target.result;
       };
