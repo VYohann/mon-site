@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Encodeur Texte en Image</title>
+  <style>
+    textarea { width: 400px; height: 100px; }
+    canvas { border: 1px solid black; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Encodeur Texte</h1>
+  <textarea id="textInput"></textarea><br>
+  <button onclick="encode()">Sauvegarder en image</button>
+  <button onclick="decode()">Lire image</button>
+  <br>
+  <canvas id="canvas" width="600" height="60"></canvas>
+
+  <script>
+    const glyphs = {
+      "0": [[0,0,0],[0,0,0],[0,0,0]],
+      "1": [[1,0,0],[0,0,0],[0,0,0]],
+      "A": [[0,1,0],[1,0,1],[1,1,1]],
+      "B": [[1,1,0],[1,1,0],[1,1,0]],
+      "I": [[1,1,1],[0,1,0],[1,1,1]],
+      "E": [[1,1,1],[1,1,0],[1,1,1]],
+      "F": [[1,1,1],[1,1,0],[1,0,0]],
+      "L": [[1,0,0],[1,0,0],[1,1,1]],
+      "S": [[0,1,1],[1,1,0],[1,1,1]],
+    };
+
+    const keywords = ["IF", "ELSE"];
+    const pixelSize = 10;
+
+    function getColor(char) {
+      if (keywords.includes(char)) return "deeppink";
+      if (!isNaN(char)) return "black";
+      if (/[A-Z]/.test(char)) return "blue";
+      return "gray";
+    }
+
+    function encode() {
+      const text = document.getElementById("textInput").value.toUpperCase().split(/\s+/);
+      const ctx = document.getElementById("canvas").getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      text.forEach((char, idx) => {
+        const glyph = glyphs[char] || glyphs[char[0]] || glyphs["0"];
+        const color = getColor(char);
+        for (let y = 0; y < 3; y++) {
+          for (let x = 0; x < 3; x++) {
+            if (glyph[y][x]) {
+              ctx.fillStyle = color;
+              ctx.fillRect(idx * 30 + x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+            }
+          }
+        }
+      });
+    }
+
+    function decode() {
+      const ctx = document.getElementById("canvas").getContext("2d");
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      const chars = [];
+      const glyphKeys = Object.entries(glyphs).map(([k, v]) => [k, v.flat().join("")]);
+
+      for (let i = 0; i < canvas.width; i += 30) {
+        const matrix = [];
+        for (let y = 0; y < 3; y++) {
+          const row = [];
+          for (let x = 0; x < 3; x++) {
+            const px = i + x * pixelSize + 5;
+            const py = y * pixelSize + 5;
+            const index = ((py * canvas.width) + px) * 4;
+            const [r, g, b] = [data[index], data[index+1], data[index+2]];
+            const isColored = (r + g + b) < 700;
+            row.push(isColored ? 1 : 0);
+          }
+          matrix.push(row);
+        }
+        const flat = matrix.flat().join("");
+        const match = glyphKeys.find(([, pat]) => pat === flat);
+        chars.push(match ? match[0] : "?");
+      }
+
+      alert("Texte reconstitué : " + chars.join(" "));
+    }
+  </script>
+</body>
+</html>
