@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Méditation Minuteur</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #f0f4f8;
+    color: #333;
+    padding: 2em;
+  }
+  button {
+    font-size: 1.2em;
+    padding: 1em 2em;
+    margin: 1em;
+    cursor: pointer;
+  }
+  #timer {
+    font-size: 3em;
+    margin-top: 1em;
+  }
+</style>
+</head>
+<body>
+
+<h1>Minuteur de méditation</h1>
+
+<button id="startStopBtn">Démarrer</button>
+<button id="toggleSoundBtn">Activer ambiance</button>
+
+<div id="timer">00:00</div>
+
+<audio id="dingSound" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
+<audio id="ambientSound" loop src="https://cdn.pixabay.com/download/audio/2022/03/21/audio_6ee41e0a7e.mp3?filename=calm-ambient-meditation-11089.mp3" preload="auto"></audio>
+
+<script>
+  const startStopBtn = document.getElementById('startStopBtn');
+  const toggleSoundBtn = document.getElementById('toggleSoundBtn');
+  const timerDisplay = document.getElementById('timer');
+  const dingSound = document.getElementById('dingSound');
+  const ambientSound = document.getElementById('ambientSound');
+
+  let timer = null;
+  let secondsElapsed = 0;
+  let running = false;
+  let ambientOn = false;
+  const dingInterval = 5 * 60; // 5 minutes in seconds
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60).toString().padStart(2,'0');
+    const s = (sec % 60).toString().padStart(2,'0');
+    return `${m}:${s}`;
+  }
+
+  function tick() {
+    secondsElapsed++;
+    timerDisplay.textContent = formatTime(secondsElapsed);
+    if (secondsElapsed % dingInterval === 0) {
+      dingSound.play();
+    }
+  }
+
+  startStopBtn.addEventListener('click', () => {
+    if (!running) {
+      timer = setInterval(tick, 1000);
+      running = true;
+      startStopBtn.textContent = 'Arrêter';
+      // Jouer un ding au départ
+      dingSound.play();
+    } else {
+      clearInterval(timer);
+      running = false;
+      startStopBtn.textContent = 'Démarrer';
+      secondsElapsed = 0;
+      timerDisplay.textContent = "00:00";
+      dingSound.pause();
+      dingSound.currentTime = 0;
+    }
+  });
+
+  toggleSoundBtn.addEventListener('click', () => {
+    if (!ambientOn) {
+      ambientSound.play();
+      toggleSoundBtn.textContent = 'Désactiver ambiance';
+      ambientOn = true;
+    } else {
+      ambientSound.pause();
+      toggleSoundBtn.textContent = 'Activer ambiance';
+      ambientOn = false;
+    }
+  });
+</script>
+
+</body>
+</html>
