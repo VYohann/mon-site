@@ -10,18 +10,25 @@
       width: 60px; height: 60px; text-align: center; vertical-align: middle;
       border: 2px solid black; font-size: 40px; cursor: pointer;
     }
+    #controls { margin-top: 15px; }
     #message { margin-top: 20px; font-size: 18px; }
+    button { font-size: 16px; padding: 10px 20px; cursor: pointer; }
   </style>
 </head>
 <body>
 
 <h2>Solveur Morpion – Objectif : Match nul</h2>
 <table id="board"></table>
+
+<div id="controls">
+  <button onclick="nextTurn()">Passer le tour</button>
+</div>
 <div id="message"></div>
+
 <script>
   const board = Array(3).fill().map(() => Array(3).fill(""));
-  const playerBlock = "✶"; // Symbole du joueur
-  let turn = 0;
+  const playerBlock = "✶";
+  let currentSymbol = "O"; // Le jeu commence avec "O"
   const table = document.getElementById("board");
   const message = document.getElementById("message");
 
@@ -44,30 +51,28 @@
     }
   }
 
-  function gameTurn() {
+  function nextTurn() {
     if (isGameOver()) return;
 
-    placeSymbol("O"); // Tour du O
-    if (isGameOver()) return;
-
-    placeSymbol("X"); // Tour du X
-    if (isGameOver()) return;
-  }
-
-  function placeSymbol(sym) {
-    for (let i = 0; i < 3; i++) {
-      for (let j = 0; j < 3; j++) {
+    let played = false;
+    for (let i = 0; i < 3 && !played; i++) {
+      for (let j = 0; j < 3 && !played; j++) {
         if (board[i][j] === "") {
-          board[i][j] = sym;
-          updateCell(i, j, sym);
-          return;
+          board[i][j] = currentSymbol;
+          table.rows[i].cells[j].textContent = currentSymbol;
+          played = true;
         }
       }
     }
-  }
 
-  function updateCell(i, j, sym) {
-    table.rows[i].cells[j].textContent = sym;
+    if (!played) {
+      message.textContent = "Plus aucune case disponible !";
+      return;
+    }
+
+    if (isGameOver()) return;
+
+    currentSymbol = currentSymbol === "O" ? "X" : "O"; // Alterner le symbole
   }
 
   function isGameOver() {
@@ -96,8 +101,6 @@
 
     return null;
   }
-
-  setInterval(gameTurn, 1500); // Le jeu joue automatiquement tous les 1.5 secondes
 </script>
 
 </body>
