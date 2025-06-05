@@ -28,11 +28,11 @@
 <script>
   const board = Array(3).fill().map(() => Array(3).fill(""));
   const playerBlock = "✶";
-  let currentSymbol = "O"; // Le jeu commence avec "O"
+  let currentSymbol = "O"; // Commence par O
   const table = document.getElementById("board");
   const message = document.getElementById("message");
 
-  // Créer la grille
+  // Création de la grille
   for (let i = 0; i < 3; i++) {
     const row = table.insertRow();
     for (let j = 0; j < 3; j++) {
@@ -54,25 +54,29 @@
   function nextTurn() {
     if (isGameOver()) return;
 
-    let played = false;
-    for (let i = 0; i < 3 && !played; i++) {
-      for (let j = 0; j < 3 && !played; j++) {
+    const emptyCells = [];
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
         if (board[i][j] === "") {
-          board[i][j] = currentSymbol;
-          table.rows[i].cells[j].textContent = currentSymbol;
-          played = true;
+          emptyCells.push({ i, j });
         }
       }
     }
 
-    if (!played) {
-      message.textContent = "Plus aucune case disponible !";
+    if (emptyCells.length === 0) {
+      message.textContent = "Plus de cases disponibles.";
       return;
     }
 
+    // Choisir une case vide aléatoire
+    const choice = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    board[choice.i][choice.j] = currentSymbol;
+    table.rows[choice.i].cells[choice.j].textContent = currentSymbol;
+
     if (isGameOver()) return;
 
-    currentSymbol = currentSymbol === "O" ? "X" : "O"; // Alterner le symbole
+    // Changer le symbole pour le tour suivant
+    currentSymbol = currentSymbol === "O" ? "X" : "O";
   }
 
   function isGameOver() {
@@ -86,10 +90,10 @@
 
   function checkWin() {
     const lines = [
-      ...board, // lignes
-      ...[0,1,2].map(j => board.map(row => row[j])), // colonnes
-      [ [0,0],[1,1],[2,2] ].map(([i,j]) => board[i][j]), // diagonale \
-      [ [0,2],[1,1],[2,0] ].map(([i,j]) => board[i][j])  // diagonale /
+      ...board,
+      ...[0, 1, 2].map(j => board.map(row => row[j])),
+      [ [0, 0], [1, 1], [2, 2] ].map(([i, j]) => board[i][j]),
+      [ [0, 2], [1, 1], [2, 0] ].map(([i, j]) => board[i][j])
     ];
 
     for (let line of lines) {
@@ -97,6 +101,7 @@
       if (line.every(v => v === "X")) return "X";
     }
 
+    // Vérifie si toutes les cases sont remplies (hors ✶)
     if (board.flat().every(cell => cell !== "" && cell !== playerBlock)) return "Draw";
 
     return null;
